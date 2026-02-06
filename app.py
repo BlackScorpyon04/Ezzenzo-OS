@@ -5,6 +5,34 @@ from datetime import datetime
 import random
 import time
 
+# --- AUTHENTICATION MODULE ---
+def check_password():
+    """Returns `True` if the user had the correct password."""
+    # 1. If no password set in secrets, allow access (Demo Mode or Local Dev)
+    if "APP_PASSWORD" not in st.secrets:
+        return True
+
+    # 2. Check session state
+    if "password_correct" not in st.session_state:
+        st.session_state.password_correct = False
+
+    if st.session_state.password_correct:
+        return True
+
+    # 3. Password Input
+    st.markdown("## 🔒 Ezzenzo OS")
+    st.markdown("System access is restricted.")
+    pwd = st.text_input("Enter Access Code", type="password")
+    
+    if st.button("Login"):
+        if pwd == st.secrets["APP_PASSWORD"]:
+            st.session_state.password_correct = True
+            st.rerun()
+        else:
+            st.error("⛔ Access Denied")
+            
+    return False
+
 # Try to import Google integrations; handle gracefully if not configured yet
 try:
     from streamlit_gsheets import GSheetsConnection
@@ -359,6 +387,10 @@ def render_performance():
 # --- 4. MAIN CONTROLLER ---
 
 def main():
+    # SECURITY CHECK
+    if not check_password():
+        st.stop()
+
     # Handle Navigation Override (from Home Screen buttons)
     if 'nav_override' in st.session_state:
         selection = st.session_state['nav_override']
